@@ -62,6 +62,13 @@ export function $normalizeTextNode(textNode: TextNode): void {
     return;
   }
 
+  // Text is never merged into or out of the node being composed: merging
+  // rewrites its DOM text node, and the browser's composition range would
+  // take in the merged text. The nodes merge when the composition ends.
+  const compositionKey = getActiveEditor()._compositionKey;
+  const isComposed = (n: TextNode) =>
+    compositionKey !== null && n.__key === compositionKey;
+
   // Backward
   let previousNode;
 
@@ -76,6 +83,8 @@ export function $normalizeTextNode(textNode: TextNode): void {
     }
     if (previousNode.__text === '') {
       previousNode.remove();
+    } else if (isComposed(previousNode) || isComposed(node)) {
+      break;
     } else if ($canSimpleTextNodesBeMerged(previousNode, node)) {
       node = $mergeTextNodes(previousNode, node);
       break;
@@ -98,6 +107,8 @@ export function $normalizeTextNode(textNode: TextNode): void {
     }
     if (nextNode.__text === '') {
       nextNode.remove();
+    } else if (isComposed(nextNode) || isComposed(node)) {
+      break;
     } else if ($canSimpleTextNodesBeMerged(node, nextNode)) {
       node = $mergeTextNodes(node, nextNode);
       break;

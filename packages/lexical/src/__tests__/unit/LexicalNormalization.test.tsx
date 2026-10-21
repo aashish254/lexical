@@ -9,7 +9,10 @@ import {
   $createParagraphNode,
   $createTextNode,
   $getRoot,
+  $setCompositionKey,
+  type ParagraphNode,
   type RangeSelection,
+  type TextNode,
 } from 'lexical';
 import {describe, expect, test} from 'vitest';
 
@@ -22,6 +25,45 @@ import {
 
 describe('LexicalNormalization tests', () => {
   initializeUnitTest(testEnv => {
+    describe('text nodes next to a composition', () => {
+      test('are not merged into the composed node until it ends', async () => {
+        const {editor} = testEnv;
+        let composedKey = '';
+        await editor.update(() => {
+          const composed = $createTextNode('にj2z');
+          $getRoot().clear().append($createParagraphNode().append(composed));
+          composedKey = composed.getKey();
+          composed.select(1, 1);
+          $setCompositionKey(composedKey);
+        });
+        // A collaborator's text lands right before the composition.
+        await editor.update(() => {
+          const paragraph = $getRoot().getFirstChild() as ParagraphNode;
+          paragraph.getFirstChildOrThrow().insertBefore($createTextNode('j1z'));
+        });
+        editor.getEditorState().read(() => {
+          const paragraph = $getRoot().getFirstChild() as ParagraphNode;
+          const texts = paragraph.getChildren() as TextNode[];
+          expect(texts.map(t => t.getTextContent())).toEqual(['j1z', 'にj2z']);
+          expect(texts[1].getKey()).toBe(composedKey);
+        });
+        await editor.update(() => {
+          $setCompositionKey(null);
+          (
+            (
+              $getRoot().getFirstChild() as ParagraphNode
+            ).getLastChildOrThrow() as TextNode
+          ).markDirty();
+        });
+        editor.getEditorState().read(() => {
+          expect($getRoot().getTextContent()).toBe('j1zにj2z');
+          expect(
+            ($getRoot().getFirstChild() as ParagraphNode).getChildrenSize(),
+          ).toBe(1);
+        });
+      });
+    });
+
     describe('$normalizeSelection', () => {
       for (const reversed of [false, true]) {
         const getAnchor = (x: RangeSelection) =>
