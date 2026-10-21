@@ -357,6 +357,8 @@
       "@lexical/tailwind": ["../lexical-tailwind/src/index.ts"],
       "@lexical/text": ["../lexical-text/src/index.ts"],
       "@lexical/utils": ["../lexical-utils/src/index.ts"],
+      "@lexical/y": ["../lexical-y/src/index.ts"],
+      "@lexical/y/server": ["../lexical-y/src/server.ts"],
       "@lexical/yjs": ["../lexical-yjs/src/index.ts"]
     }
   },

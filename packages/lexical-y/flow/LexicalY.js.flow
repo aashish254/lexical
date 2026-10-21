@@ -1,0 +1,84 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow strict
+ */
+
+import type {LexicalEditor, LexicalExtension, PointType} from 'lexical';
+import type {Doc, Node as YNode, UndoManager} from '@y/y';
+import type {ReadonlySignal} from '@lexical/extension';
+
+/**
+ * @lexical/y: EXPERIMENTAL Yjs 14 binding (block-marker layout).
+ */
+
+declare export var DEFAULT_ROOT_NAME: string;
+declare export var LAYOUT_VERSION: number;
+
+export type YBindingStatus = 'pending' | 'active' | 'readonly';
+
+export type ClientIDRange = 'uint53' | 'uint32';
+
+declare export function createYDoc(options?: {
+  gc?: boolean,
+  guid?: string,
+  compat?: 'yrs-0.23',
+  ...
+}): Doc;
+
+export type YBindingOptions = {
+  root?: YNode,
+  captureTimeout?: number | null,
+  onWarn?: (message: string) => void,
+  onStatus?: (status: YBindingStatus) => void,
+  selfCheck?: boolean,
+  selfCheckSample?: number,
+  convert?: boolean,
+  clientIDRange?: ClientIDRange,
+};
+
+export type YCursor = {anchor: unknown, focus: unknown};
+
+declare export class YBinding {
+  readonly editor: LexicalEditor;
+  readonly doc: Doc;
+  readonly root: YNode;
+  status: YBindingStatus;
+  undoManager: UndoManager | null;
+  constructor(editor: LexicalEditor, doc: Doc, options?: YBindingOptions): void;
+  start(): () => void;
+  dispose(): void;
+  initialize(): void;
+  undo(): boolean;
+  redo(): boolean;
+  getCursor(): YCursor | null;
+  $resolveCursor(cursor: YCursor): {anchor: PointType, focus: PointType} | null;
+}
+
+declare export function writeEditorToYDoc(
+  editor: LexicalEditor,
+  doc: Doc,
+  options?: {root?: YNode, clientIDRange?: ClientIDRange},
+): void;
+
+export type YCollabConfig = {
+  doc: Doc | null,
+  root: YNode | null,
+  synced: boolean,
+  captureTimeout: number | null,
+  clientIDRange: ClientIDRange,
+  onWarn: ((message: string) => void) | null,
+  selfCheck: boolean | null,
+  selfCheckSample: number | null,
+  convert: boolean,
+};
+
+declare export var YCollabExtension: LexicalExtension<
+  YCollabConfig,
+  '@lexical/y/Collab',
+  {binding: YBinding, status: ReadonlySignal<YBindingStatus>},
+  void,
+>;

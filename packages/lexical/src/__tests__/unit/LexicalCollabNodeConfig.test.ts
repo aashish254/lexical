@@ -54,7 +54,37 @@ class OverridingNode extends FormatNode {
 // No $config of its own at all.
 class NoConfigNode extends FormatNode {}
 
+class InlineContentNode extends ElementNode {
+  $config() {
+    return this.config('test_collab_inline_content', {
+      collab: {content: 'inline'},
+      extends: ElementNode,
+    });
+  }
+}
+
+class InlineContentChildNode extends InlineContentNode {
+  $config() {
+    return this.config('test_collab_inline_content_child', {
+      collab: {block: 'node'},
+      extends: InlineContentNode,
+    });
+  }
+}
+
 describe('getDeclaredCollabConfig', () => {
+  test('content declarations are inherited per key', () => {
+    expect(getDeclaredCollabConfig(InlineContentNode)).toEqual({
+      block: undefined,
+      content: 'inline',
+      inline: undefined,
+    });
+    expect(getDeclaredCollabConfig(InlineContentChildNode).content).toBe(
+      'inline',
+    );
+    expect(getDeclaredCollabConfig(InlineContentChildNode).block).toBe('node');
+  });
+
   test('returns no hints for classes that declare none', () => {
     expect(getDeclaredCollabConfig(ElementNode)).toEqual({});
     expect(getDeclaredCollabConfig(TextNode)).toEqual({});

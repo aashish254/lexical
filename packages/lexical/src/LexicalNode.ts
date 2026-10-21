@@ -195,6 +195,16 @@ export interface CollabNodeConfig {
    * back to `'node'`. Reading the hints never throws.
    */
   readonly block?: 'node' | 'line' | CollabBlockGroupConfig;
+  /**
+   * What a block {@link ElementNode} stored as its own node holds: `'block'`
+   * (lines and other blocks, like a table cell) or `'inline'` (inline content
+   * only, like a code block). A binding may record it when it stores the
+   * node, so that every reader, including one without the class, reads its
+   * content the same way (for example leftover inline content of a block
+   * container as a paragraph). When undeclared, a binding decides from the
+   * node when it first stores it.
+   */
+  readonly content?: 'block' | 'inline';
 }
 
 /**
